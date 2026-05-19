@@ -153,7 +153,7 @@ pub fn apply_visuals(ctx: &egui::Context, p: &Palette) {
         spread: 0.0,
         color: egui::Color32::from_black_alpha(60),
     };
-    v.popup_shadow = v.window_shadow.clone();
+    v.popup_shadow = v.window_shadow;
 
     style.spacing.item_spacing = egui::vec2(6.0, 6.0);
     style.spacing.button_padding = egui::vec2(10.0, 5.0);

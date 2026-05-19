@@ -1,4 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+// nested `if let` reads clearer than collapsed forms until let-chains stabilize
+#![allow(clippy::collapsible_if)]
 
 use eframe::egui;
 use std::path::PathBuf;
@@ -193,7 +195,9 @@ impl eframe::App for ZenApp {
                     ui.add_space(12.0);
 
                     ui.menu_button(
-                        egui::RichText::new("file").color(self.palette.text).size(12.0),
+                        egui::RichText::new("file")
+                            .color(self.palette.text)
+                            .size(12.0),
                         |ui| {
                             if ui.button("open…").clicked() {
                                 self.open_file();
@@ -321,7 +325,12 @@ impl eframe::App for ZenApp {
                             egui::vec2(pane_width, available.y),
                             egui::Layout::top_down(egui::Align::Min),
                             |ui| {
-                                editor::show(ui, &mut self.text, &self.palette, pending_format.take());
+                                editor::show(
+                                    ui,
+                                    &mut self.text,
+                                    &self.palette,
+                                    pending_format.take(),
+                                );
                             },
                         );
                         if before != self.text {

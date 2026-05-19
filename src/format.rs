@@ -59,7 +59,13 @@ pub fn toolbar(ui: &mut egui::Ui, p: &Palette) -> Option<FormatAction> {
     action
 }
 
-fn button(ui: &mut egui::Ui, label: &str, tooltip: &str, bold: bool, p: &Palette) -> egui::Response {
+fn button(
+    ui: &mut egui::Ui,
+    label: &str,
+    tooltip: &str,
+    bold: bool,
+    p: &Palette,
+) -> egui::Response {
     let color = if bold { p.accent } else { p.text };
     let rich = egui::RichText::new(label).size(13.0).color(color);
     let btn = egui::Button::new(rich)

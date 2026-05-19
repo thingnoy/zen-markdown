@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            artifact: zen-markdown-macos-arm64
+            bin: zen-markdown
+          - os: ubuntu-latest
+            artifact: zen-markdown-linux-x86_64
+            bin: zen-markdown
+          - os: windows-latest
+            artifact: zen-markdown-windows-x86_64
+            bin: zen-markdown.exe
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libssl-dev
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Package (unix)
+        if: runner.os != 'Windows'
+        run: |
+          tar -czf "${{ matrix.artifact }}.tar.gz" -C target/release "${{ matrix.bin }}"
+
+      - name: Package (windows)
+        if: runner.os == 'Windows'
+        run: |
+          Compress-Archive -Path "target/release/${{ matrix.bin }}" -DestinationPath "${{ matrix.artifact }}.zip"
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ matrix.artifact }}.tar.gz
+            ${{ matrix.artifact }}.zip
+          fail_on_unmatched_files: false
+          generate_release_notes: true

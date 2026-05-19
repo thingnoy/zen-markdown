@@ -82,7 +82,14 @@ fn render(ui: &mut egui::Ui, src: &str, p: &Palette) {
                         }
                         _ => format!("{}- ", indent),
                     };
-                    append_with_color(&mut job, &marker, &InlineStyle::default(), p, ui, Some(p.accent_cyan));
+                    append_with_color(
+                        &mut job,
+                        &marker,
+                        &InlineStyle::default(),
+                        p,
+                        ui,
+                        Some(p.accent_cyan),
+                    );
                     suppress_paragraph_break = true;
                 }
                 Tag::Emphasis => style.italic = true,
@@ -154,7 +161,12 @@ fn render(ui: &mut egui::Ui, src: &str, p: &Palette) {
     emit_block(ui, &mut job, in_blockquote, p);
 }
 
-fn emit_block(ui: &mut egui::Ui, job: &mut egui::text::LayoutJob, in_blockquote: bool, p: &Palette) {
+fn emit_block(
+    ui: &mut egui::Ui,
+    job: &mut egui::text::LayoutJob,
+    in_blockquote: bool,
+    p: &Palette,
+) {
     if job.text.is_empty() {
         return;
     }
@@ -262,10 +274,7 @@ fn resolve_font_and_color(
             HeadingLevel::H6 => 1.0,
         };
         let base = egui::TextStyle::Heading.resolve(ui_style);
-        let id = egui::FontId::new(
-            base.size * scale,
-            egui::FontFamily::Name("zen-mono".into()),
-        );
+        let id = egui::FontId::new(base.size * scale, egui::FontFamily::Name("zen-mono".into()));
         let lvl_n = match level {
             HeadingLevel::H1 => 1,
             HeadingLevel::H2 => 2,
@@ -285,11 +294,7 @@ fn resolve_font_and_color(
     }
 
     let body = egui::TextStyle::Body.resolve(ui_style);
-    let color = if style.bold {
-        p.heading
-    } else {
-        p.text
-    };
+    let color = if style.bold { p.heading } else { p.text };
     (body, color)
 }
 
@@ -304,10 +309,8 @@ fn add_heading_spacing(ui: &mut egui::Ui, level: HeadingLevel) {
 }
 
 fn soft_rule(ui: &mut egui::Ui, p: &Palette) {
-    let (rect, _) = ui.allocate_exact_size(
-        egui::vec2(ui.available_width(), 18.0),
-        egui::Sense::hover(),
-    );
+    let (rect, _) =
+        ui.allocate_exact_size(egui::vec2(ui.available_width(), 18.0), egui::Sense::hover());
     let center_y = rect.center().y;
     ui.painter().line_segment(
         [
@@ -372,10 +375,9 @@ fn highlight_simple_rust(
     p: &Palette,
 ) -> Vec<(String, egui::Color32)> {
     const KEYWORDS: &[&str] = &[
-        "fn", "let", "mut", "const", "static", "struct", "enum", "impl", "trait",
-        "pub", "use", "mod", "if", "else", "match", "for", "while", "loop",
-        "return", "break", "continue", "self", "Self", "as", "in", "where",
-        "async", "await", "move", "ref", "true", "false",
+        "fn", "let", "mut", "const", "static", "struct", "enum", "impl", "trait", "pub", "use",
+        "mod", "if", "else", "match", "for", "while", "loop", "return", "break", "continue",
+        "self", "Self", "as", "in", "where", "async", "await", "move", "ref", "true", "false",
     ];
     let mut result: Vec<(String, egui::Color32)> = Vec::new();
     let mut buf = String::new();
@@ -388,9 +390,9 @@ fn highlight_simple_rust(
         let s = std::mem::take(buf);
         let color = if KEYWORDS.contains(&s.as_str()) {
             p.accent_soft
-        } else if s.chars().next().map_or(false, |c| c.is_ascii_uppercase()) {
+        } else if s.chars().next().is_some_and(|c| c.is_ascii_uppercase()) {
             p.accent_cyan
-        } else if s.chars().next().map_or(false, |c| c.is_ascii_digit()) {
+        } else if s.chars().next().is_some_and(|c| c.is_ascii_digit()) {
             p.accent_orange
         } else {
             p.code_block_fg

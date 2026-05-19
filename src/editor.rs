@@ -69,10 +69,7 @@ fn apply_action(
             let replacement = format!("{}{}{}", left, selected, right);
             text.replace_range(bstart..bend, &replacement);
             let left_len = left.chars().count();
-            CCursorRange::two(
-                CCursor::new(cmin + left_len),
-                CCursor::new(cmax + left_len),
-            )
+            CCursorRange::two(CCursor::new(cmin + left_len), CCursor::new(cmax + left_len))
         }
         FormatAction::LinePrefix(prefix) => {
             let bstart = char_to_byte(text, cmin);
@@ -115,11 +112,6 @@ fn highlight(text: &str, style: &egui::Style, p: &Palette) -> egui::text::Layout
             push(&mut job, line, color, &size, false);
         } else if trimmed.starts_with("> ") {
             push(&mut job, line, p.muted, &font_id, true);
-        } else if trimmed.starts_with("- ")
-            || trimmed.starts_with("* ")
-            || trimmed.starts_with("+ ")
-        {
-            inline_highlight(&mut job, line, &font_id, p);
         } else {
             inline_highlight(&mut job, line, &font_id, p);
         }
@@ -129,7 +121,7 @@ fn highlight(text: &str, style: &egui::Style, p: &Palette) -> egui::text::Layout
 
 fn heading_level(s: &str) -> Option<usize> {
     let hashes = s.chars().take_while(|&c| c == '#').count();
-    if hashes >= 1 && hashes <= 6 && s.chars().nth(hashes) == Some(' ') {
+    if (1..=6).contains(&hashes) && s.chars().nth(hashes) == Some(' ') {
         Some(hashes)
     } else {
         None
@@ -155,6 +147,7 @@ fn push(
     );
 }
 
+#[allow(clippy::manual_strip, clippy::collapsible_if)]
 fn inline_highlight(
     job: &mut egui::text::LayoutJob,
     line: &str,

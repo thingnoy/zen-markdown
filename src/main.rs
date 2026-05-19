@@ -137,6 +137,7 @@ impl eframe::App for ZenApp {
         };
 
         let mut theme_toggle = false;
+        let mut pending_format: Option<format::FormatAction> = None;
         ctx.input_mut(|i| {
             if i.consume_key(cmd, egui::Key::O) {
                 self.open_file();
@@ -211,7 +212,9 @@ impl eframe::App for ZenApp {
 
                     if self.show_editor {
                         ui.add_space(8.0);
-                        format::toolbar(ui, &mut self.text, &self.palette);
+                        if let Some(a) = format::toolbar(ui, &self.palette) {
+                            pending_format = Some(a);
+                        }
                     }
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -318,7 +321,7 @@ impl eframe::App for ZenApp {
                             egui::vec2(pane_width, available.y),
                             egui::Layout::top_down(egui::Align::Min),
                             |ui| {
-                                editor::show(ui, &mut self.text, &self.palette);
+                                editor::show(ui, &mut self.text, &self.palette, pending_format.take());
                             },
                         );
                         if before != self.text {

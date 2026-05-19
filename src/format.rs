@@ -2,47 +2,61 @@ use eframe::egui;
 
 use crate::theme::Palette;
 
-pub fn toolbar(ui: &mut egui::Ui, text: &mut String, p: &Palette) {
+#[derive(Clone, Copy)]
+pub enum FormatAction {
+    Wrap(&'static str, &'static str),
+    LinePrefix(&'static str),
+    Insert(&'static str),
+}
+
+pub fn toolbar(ui: &mut egui::Ui, p: &Palette) -> Option<FormatAction> {
     let cmd = if cfg!(target_os = "macos") {
         egui::Modifiers::MAC_CMD
     } else {
         egui::Modifiers::CTRL
     };
 
+    let mut action: Option<FormatAction> = None;
+
     if button(ui, "B", "Bold (Cmd-B)", true, p).clicked()
         || ui.input_mut(|i| i.consume_key(cmd, egui::Key::B))
     {
-        wrap_selection(text, "**", "**");
+        action = Some(FormatAction::Wrap("**", "**"));
     }
     if button(ui, "I", "Italic (Cmd-I)", false, p).clicked()
         || ui.input_mut(|i| i.consume_key(cmd, egui::Key::I))
     {
-        wrap_selection(text, "*", "*");
+        action = Some(FormatAction::Wrap("*", "*"));
     }
     if button(ui, "`", "Inline code (Cmd-E)", false, p).clicked()
         || ui.input_mut(|i| i.consume_key(cmd, egui::Key::E))
     {
-        wrap_selection(text, "`", "`");
+        action = Some(FormatAction::Wrap("`", "`"));
+    }
+    if button(ui, "~", "Strikethrough", false, p).clicked() {
+        action = Some(FormatAction::Wrap("~~", "~~"));
     }
     if button(ui, "H1", "Heading 1 (Cmd-1)", false, p).clicked()
         || ui.input_mut(|i| i.consume_key(cmd, egui::Key::Num1))
     {
-        line_prefix(text, "# ");
+        action = Some(FormatAction::LinePrefix("# "));
     }
     if button(ui, "H2", "Heading 2 (Cmd-2)", false, p).clicked()
         || ui.input_mut(|i| i.consume_key(cmd, egui::Key::Num2))
     {
-        line_prefix(text, "## ");
+        action = Some(FormatAction::LinePrefix("## "));
     }
     if button(ui, "-", "Bullet list", false, p).clicked() {
-        line_prefix(text, "- ");
+        action = Some(FormatAction::LinePrefix("- "));
     }
     if button(ui, ">", "Quote", false, p).clicked() {
-        line_prefix(text, "> ");
+        action = Some(FormatAction::LinePrefix("> "));
     }
     if button(ui, "[]", "Link", false, p).clicked() {
-        text.push_str("[text](url)");
+        action = Some(FormatAction::Insert("[text](url)"));
     }
+
+    action
 }
 
 fn button(ui: &mut egui::Ui, label: &str, tooltip: &str, bold: bool, p: &Palette) -> egui::Response {
@@ -53,16 +67,4 @@ fn button(ui: &mut egui::Ui, label: &str, tooltip: &str, bold: bool, p: &Palette
         .rounding(egui::Rounding::same(4.0))
         .fill(p.bg_alt);
     ui.add(btn).on_hover_text(tooltip)
-}
-
-fn wrap_selection(text: &mut String, left: &str, right: &str) {
-    text.push_str(left);
-    text.push_str(right);
-}
-
-fn line_prefix(text: &mut String, prefix: &str) {
-    if !text.ends_with('\n') && !text.is_empty() {
-        text.push('\n');
-    }
-    text.push_str(prefix);
 }

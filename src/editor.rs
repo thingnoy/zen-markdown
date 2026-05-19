@@ -1,14 +1,20 @@
 use eframe::egui;
+use egui::text::{CCursor, CCursorRange};
 
+use crate::format::FormatAction;
 use crate::theme::Palette;
 
-pub fn show(ui: &mut egui::Ui, text: &mut String, p: &Palette) {
+const EDITOR_ID: &str = "zen_editor";
+
+pub fn show(ui: &mut egui::Ui, text: &mut String, p: &Palette, action: Option<FormatAction>) {
     let palette = p.clone();
     let mut layouter = move |ui: &egui::Ui, src: &str, wrap_width: f32| {
         let mut job = highlight(src, ui.style(), &palette);
         job.wrap.max_width = wrap_width;
         ui.fonts(|f| f.layout_job(job))
     };
+
+    let id = egui::Id::new(EDITOR_ID);
 
     egui::Frame::none()
         .fill(p.bg_alt)
@@ -19,17 +25,79 @@ pub fn show(ui: &mut egui::Ui, text: &mut String, p: &Palette) {
                 .id_salt("editor_scroll")
                 .auto_shrink([false; 2])
                 .show(ui, |ui| {
-                    ui.add(
-                        egui::TextEdit::multiline(text)
-                            .font(egui::TextStyle::Monospace)
-                            .frame(false)
-                            .desired_rows(30)
-                            .desired_width(f32::INFINITY)
-                            .lock_focus(true)
-                            .layouter(&mut layouter),
-                    );
+                    let output = egui::TextEdit::multiline(text)
+                        .id(id)
+                        .font(egui::TextStyle::Monospace)
+                        .frame(false)
+                        .desired_rows(30)
+                        .desired_width(f32::INFINITY)
+                        .lock_focus(true)
+                        .layouter(&mut layouter)
+                        .show(ui);
+
+                    if let Some(action) = action {
+                        apply_action(ui.ctx(), id, output.state, text, action);
+                    }
                 });
         });
+}
+
+fn apply_action(
+    ctx: &egui::Context,
+    id: egui::Id,
+    mut state: egui::text_edit::TextEditState,
+    text: &mut String,
+    action: FormatAction,
+) {
+    let (cmin, cmax) = match state.cursor.char_range() {
+        Some(range) => {
+            let a = range.primary.index;
+            let b = range.secondary.index;
+            (a.min(b), a.max(b))
+        }
+        None => {
+            let n = text.chars().count();
+            (n, n)
+        }
+    };
+
+    let new_range = match action {
+        FormatAction::Wrap(left, right) => {
+            let bstart = char_to_byte(text, cmin);
+            let bend = char_to_byte(text, cmax);
+            let selected = text[bstart..bend].to_string();
+            let replacement = format!("{}{}{}", left, selected, right);
+            text.replace_range(bstart..bend, &replacement);
+            let left_len = left.chars().count();
+            CCursorRange::two(
+                CCursor::new(cmin + left_len),
+                CCursor::new(cmax + left_len),
+            )
+        }
+        FormatAction::LinePrefix(prefix) => {
+            let bstart = char_to_byte(text, cmin);
+            let line_start = text[..bstart].rfind('\n').map(|i| i + 1).unwrap_or(0);
+            text.insert_str(line_start, prefix);
+            let plen = prefix.chars().count();
+            CCursorRange::one(CCursor::new(cmin + plen))
+        }
+        FormatAction::Insert(s) => {
+            let bstart = char_to_byte(text, cmin);
+            text.insert_str(bstart, s);
+            CCursorRange::one(CCursor::new(cmin + s.chars().count()))
+        }
+    };
+
+    state.cursor.set_char_range(Some(new_range));
+    state.store(ctx, id);
+    ctx.memory_mut(|m| m.request_focus(id));
+}
+
+fn char_to_byte(s: &str, char_idx: usize) -> usize {
+    s.char_indices()
+        .nth(char_idx)
+        .map(|(i, _)| i)
+        .unwrap_or(s.len())
 }
 
 fn highlight(text: &str, style: &egui::Style, p: &Palette) -> egui::text::LayoutJob {

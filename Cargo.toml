@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 description = "A fast, native, zen-like markdown editor built with Rust + egui"
 license = "MIT"
-repository = "https://github.com/skypart/zen-markdown"
+repository = "https://github.com/thingnoy/zen-markdown"
 readme = "README.md"
 
 [dependencies]

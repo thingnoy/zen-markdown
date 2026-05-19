@@ -8,6 +8,21 @@ A fast, native markdown editor built with Rust + [egui](https://github.com/emilk
 
 Preview-first. Mono everywhere. Starts in <200ms, stays under ~50MB RAM. No Electron.
 
+![zen-markdown in dark reader mode](docs/screenshot-dark.png)
+
+<details>
+<summary>More screenshots</summary>
+
+**Split editor — write left, preview right**
+
+![Split editor view](docs/screenshot-edit.png)
+
+**Light theme (Tokyo Day)**
+
+![Light theme](docs/screenshot-light.png)
+
+</details>
+
 ## Install
 
 ### macOS

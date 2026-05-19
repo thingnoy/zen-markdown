@@ -213,7 +213,8 @@ fn inline_highlight(
                 continue;
             }
         }
-        i += 1;
+        // advance one whole char so `i` always lands on a UTF-8 boundary
+        i += line[i..].chars().next().map_or(1, |c| c.len_utf8());
     }
     flush(job, &line[start..], p.text, font_id);
 }

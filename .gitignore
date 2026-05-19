@@ -3,7 +3,8 @@
 Cargo.lock.tmp
 .DS_Store
 
-# macOS packaging build artifacts
+# macOS packaging build artifacts (AppIcon.icns is committed for CI)
 packaging/macos/icon-1024.png
-packaging/macos/AppIcon.icns
 packaging/macos/AppIcon.iconset/
+target/*.app
+target/*.dmg

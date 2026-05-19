@@ -50,12 +50,18 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Package (unix)
-        if: runner.os != 'Windows'
+      - name: Package macOS (.dmg + .tar.gz)
+        if: runner.os == 'macOS'
+        run: |
+          bash packaging/macos/build-app.sh --dmg
+          tar -czf "${{ matrix.artifact }}.tar.gz" -C target/release "${{ matrix.bin }}"
+
+      - name: Package Linux (.tar.gz)
+        if: runner.os == 'Linux'
         run: |
           tar -czf "${{ matrix.artifact }}.tar.gz" -C target/release "${{ matrix.bin }}"
 
-      - name: Package (windows)
+      - name: Package Windows (.zip)
         if: runner.os == 'Windows'
         run: |
           Compress-Archive -Path "target/release/${{ matrix.bin }}" -DestinationPath "${{ matrix.artifact }}.zip"
@@ -64,6 +70,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            target/${{ matrix.artifact }}.dmg
             ${{ matrix.artifact }}.tar.gz
             ${{ matrix.artifact }}.zip
           fail_on_unmatched_files: false

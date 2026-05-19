@@ -2,3 +2,8 @@
 **/*.rs.bk
 Cargo.lock.tmp
 .DS_Store
+
+# macOS packaging build artifacts
+packaging/macos/icon-1024.png
+packaging/macos/AppIcon.icns
+packaging/macos/AppIcon.iconset/

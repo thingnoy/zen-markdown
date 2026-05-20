@@ -20,10 +20,15 @@ fn main() -> eframe::Result<()> {
             .with_title("zen-markdown"),
         ..Default::default()
     };
+    let initial_file = std::env::args()
+        .nth(1)
+        .map(PathBuf::from)
+        .filter(|p| p.is_file());
+
     eframe::run_native(
         "zen-markdown",
         options,
-        Box::new(|cc| Ok(Box::new(ZenApp::new(cc)))),
+        Box::new(move |cc| Ok(Box::new(ZenApp::new(cc, initial_file)))),
     )
 }
 
@@ -37,17 +42,29 @@ pub struct ZenApp {
 }
 
 impl ZenApp {
-    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    fn new(cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
         theme::install_fonts(&cc.egui_ctx);
         let palette = Palette::tokyo_night();
         theme::apply_visuals(&cc.egui_ctx, &palette);
-        Self {
+        let mut app = Self {
             text: DEFAULT_DOC.to_string(),
             current_file: None,
             dirty: false,
             show_editor: false,
             show_preview: true,
             palette,
+        };
+        if let Some(path) = initial_file {
+            app.load_path(path);
+        }
+        app
+    }
+
+    fn load_path(&mut self, path: PathBuf) {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            self.text = content;
+            self.current_file = Some(path);
+            self.dirty = false;
         }
     }
 
@@ -78,11 +95,7 @@ impl ZenApp {
             .add_filter("Markdown", &["md", "markdown", "txt"])
             .pick_file()
         {
-            if let Ok(content) = std::fs::read_to_string(&path) {
-                self.text = content;
-                self.current_file = Some(path);
-                self.dirty = false;
-            }
+            self.load_path(path);
         }
     }
 
@@ -166,6 +179,14 @@ impl eframe::App for ZenApp {
                 theme_toggle = true;
             }
         });
+
+        // open a file dragged onto the window
+        let dropped = ctx.input(|i| i.raw.dropped_files.iter().find_map(|f| f.path.clone()));
+        if let Some(path) = dropped {
+            self.load_path(path);
+            self.show_editor = true;
+        }
+        let hovering_file = ctx.input(|i| !i.raw.hovered_files.is_empty());
 
         egui::TopBottomPanel::top("toolbar")
             .frame(
@@ -349,6 +370,22 @@ impl eframe::App for ZenApp {
                     }
                 });
             });
+
+        if hovering_file {
+            let screen = ctx.screen_rect();
+            let painter = ctx.layer_painter(egui::LayerId::new(
+                egui::Order::Foreground,
+                egui::Id::new("drop_overlay"),
+            ));
+            painter.rect_filled(screen, 0.0, self.palette.bg.gamma_multiply(0.85));
+            painter.text(
+                screen.center(),
+                egui::Align2::CENTER_CENTER,
+                "drop a .md file to open",
+                egui::FontId::new(20.0, egui::FontFamily::Name("zen-mono".into())),
+                self.palette.accent,
+            );
+        }
 
         if theme_toggle {
             self.toggle_theme(ctx);

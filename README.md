@@ -86,6 +86,15 @@ bash packaging/macos/build-app.sh --install   # → /Applications/zen-markdown.a
 - Open / save `.md` with native dialogs, dirty tracking
 - Word count + reading-time status bar
 
+## Opening files
+
+- **Drag & drop** a `.md` file onto the window
+- **Command line:** `zen-markdown path/to/file.md`
+- **In-app:** `Cmd-O`
+
+> Finder "Open With → zen-markdown" (double-click) isn't wired up yet — it needs
+> macOS Apple-Event handling, which is on the roadmap.
+
 ## Shortcuts
 
 | Action | Shortcut |
@@ -103,6 +112,7 @@ bash packaging/macos/build-app.sh --install   # → /Applications/zen-markdown.a
 
 ## Roadmap
 
+- [ ] Finder "Open With" (macOS Apple-Event handling)
 - [ ] Inline WYSIWYG mode (experimental)
 - [ ] Find / replace
 - [ ] File tree sidebar

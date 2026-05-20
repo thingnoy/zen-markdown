@@ -85,15 +85,19 @@ bash packaging/macos/build-app.sh --install   # → /Applications/zen-markdown.a
 - **Geist Mono** typography, color-coded heading levels
 - Open / save `.md` with native dialogs, dirty tracking
 - Word count + reading-time status bar
+- Unicode-aware: Thai and other non-Latin scripts render via bundled fallback
 
 ## Opening files
 
+- **Finder "Open With → zen-markdown"** while the app is running
 - **Drag & drop** a `.md` file onto the window
 - **Command line:** `zen-markdown path/to/file.md`
 - **In-app:** `Cmd-O`
 
-> Finder "Open With → zen-markdown" (double-click) isn't wired up yet — it needs
-> macOS Apple-Event handling, which is on the roadmap.
+> Cold double-click (launching the app *onto* a file when it isn't already
+> running) doesn't load the file yet — winit owns the macOS app delegate, so
+> there's no early enough hook to catch the launch event. Opening while the app
+> is running works. Tracked in the roadmap.
 
 ## Shortcuts
 
@@ -112,7 +116,7 @@ bash packaging/macos/build-app.sh --install   # → /Applications/zen-markdown.a
 
 ## Roadmap
 
-- [ ] Finder "Open With" (macOS Apple-Event handling)
+- [ ] Cold-launch "Open With" (catch the launch event despite winit's delegate)
 - [ ] Inline WYSIWYG mode (experimental)
 - [ ] Find / replace
 - [ ] File tree sidebar

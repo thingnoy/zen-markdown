@@ -173,14 +173,20 @@ pub fn install_fonts(ctx: &egui::Context) {
         "geist".to_owned(),
         egui::FontData::from_static(include_bytes!("../assets/fonts/Geist.ttf")),
     );
+    // Thai (and broad Unicode) fallback — Geist has no Thai glyphs, so without
+    // this Thai text renders as "????".
+    fonts.font_data.insert(
+        "noto-thai".to_owned(),
+        egui::FontData::from_static(include_bytes!("../assets/fonts/NotoSansThai.ttf")),
+    );
 
     fonts.families.insert(
         egui::FontFamily::Name("zen-mono".into()),
-        vec!["geist-mono".to_owned()],
+        vec!["geist-mono".to_owned(), "noto-thai".to_owned()],
     );
     fonts.families.insert(
         egui::FontFamily::Name("zen-sans".into()),
-        vec!["geist".to_owned()],
+        vec!["geist".to_owned(), "noto-thai".to_owned()],
     );
 
     {
@@ -189,6 +195,7 @@ pub fn install_fonts(ctx: &egui::Context) {
             .entry(egui::FontFamily::Monospace)
             .or_default();
         mono.insert(0, "geist-mono".to_owned());
+        mono.push("noto-thai".to_owned());
     }
     {
         let prop = fonts
@@ -196,6 +203,7 @@ pub fn install_fonts(ctx: &egui::Context) {
             .entry(egui::FontFamily::Proportional)
             .or_default();
         prop.insert(0, "geist".to_owned());
+        prop.push("noto-thai".to_owned());
     }
 
     ctx.set_fonts(fonts);

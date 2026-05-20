@@ -1,6 +1,6 @@
 [package]
 name = "zen-markdown"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 description = "A fast, native, zen-like markdown editor built with Rust + egui"
 license = "MIT"
@@ -14,6 +14,16 @@ egui_extras = { version = "0.29", features = ["syntect"] }
 pulldown-cmark = "0.12"
 rfd = "0.15"
 serde = { version = "1", features = ["derive"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+    "NSAppleEventManager",
+    "NSAppleEventDescriptor",
+    "NSString",
+    "NSURL",
+    "objc2-core-services",
+] }
 
 [profile.release]
 opt-level = 3

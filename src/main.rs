@@ -7,6 +7,8 @@ use std::path::PathBuf;
 
 mod editor;
 mod format;
+#[cfg(target_os = "macos")]
+mod macos_open;
 mod preview;
 mod theme;
 
@@ -43,6 +45,15 @@ pub struct ZenApp {
 
 impl ZenApp {
     fn new(cc: &eframe::CreationContext<'_>, initial_file: Option<PathBuf>) -> Self {
+        // Register as early as possible (this runs after NSApplication has
+        // finished launching, so it overrides the default handler) to catch
+        // the launch "open document" event from Finder.
+        #[cfg(target_os = "macos")]
+        {
+            macos_open::register();
+            macos_open::set_context(&cc.egui_ctx);
+        }
+
         theme::install_fonts(&cc.egui_ctx);
         let palette = Palette::tokyo_night();
         theme::apply_visuals(&cc.egui_ctx, &palette);
@@ -143,6 +154,15 @@ impl eframe::App for ZenApp {
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        #[cfg(target_os = "macos")]
+        {
+            macos_open::register();
+            macos_open::set_context(ctx);
+            for path in macos_open::take_pending() {
+                self.load_path(path);
+            }
+        }
+
         ctx.send_viewport_cmd(egui::ViewportCommand::Title(self.title()));
 
         let cmd = if cfg!(target_os = "macos") {
